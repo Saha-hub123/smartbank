@@ -1,17 +1,21 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SmartBank - Core Banking System</title>
-    
+
     <!-- Google Fonts: Outfit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         :root {
@@ -27,7 +31,7 @@
             --success: #10b981;
             --danger: #ef4444;
             --warning: #f59e0b;
-            
+
             /* Glassmorphism utilities */
             --blur: blur(12px);
             --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
@@ -45,7 +49,7 @@
             color: var(--text-main);
             min-height: 100vh;
             display: flex;
-            background-image: 
+            background-image:
                 radial-gradient(circle at 15% 50%, rgba(0, 242, 254, 0.08) 0%, transparent 50%),
                 radial-gradient(circle at 85% 30%, rgba(79, 172, 254, 0.08) 0%, transparent 50%);
             overflow-x: hidden;
@@ -105,7 +109,8 @@
             overflow: hidden;
         }
 
-        .nav-item:hover, .nav-item.active {
+        .nav-item:hover,
+        .nav-item.active {
             color: var(--text-main);
             background: rgba(255, 255, 255, 0.05);
         }
@@ -254,7 +259,7 @@
             color: var(--text-muted);
             font-size: 0.9rem;
         }
-        
+
         .account-info span strong {
             color: var(--text-main);
             font-weight: 500;
@@ -372,9 +377,20 @@
             font-size: 0.8rem;
         }
 
-        .tx-in { background: rgba(16, 185, 129, 0.2); color: var(--success); }
-        .tx-out { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
-        .tx-fee { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+        .tx-in {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .tx-out {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+
+        .tx-fee {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
 
         .tx-details {
             display: flex;
@@ -398,23 +414,173 @@
             font-weight: 600;
         }
 
-        .status.success { background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
-        .status.pending { background: rgba(245, 158, 11, 0.1); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.3); }
+        .status.success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
 
-        .amount-in { color: var(--success); font-weight: 600; }
-        .amount-out { color: var(--danger); font-weight: 600; }
+        .status.pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .amount-in {
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .amount-out {
+            color: var(--danger);
+            font-weight: 600;
+        }
 
         /* Responsive */
         @media (max-width: 1024px) {
-            .dashboard-grid { grid-template-columns: 1fr; }
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         @media (max-width: 768px) {
-            .sidebar { transform: translateX(-100%); }
-            .main-content { margin-left: 0; width: 100%; padding: 1.5rem; }
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+                padding: 1.5rem;
+            }
+        }
+
+        /* Modal Styling */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            padding: 2rem;
+            transform: translateY(20px) scale(0.95);
+            transition: all 0.3s ease;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0) scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close-modal:hover {
+            color: var(--danger);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px var(--primary-glow);
+        }
+
+        .btn-primary {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #000;
+            border: none;
+            padding: 1rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 242, 254, 0.3);
+        }
+
+        /* Ecosystem Stats */
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-row:last-child {
+            border-bottom: none;
         }
     </style>
 </head>
+
 <body>
 
     <!-- Sidebar Navigation -->
@@ -429,14 +595,16 @@
             <li><a href="#" class="nav-item"><i class="fa-solid fa-hand-holding-dollar"></i> Pinjaman</a></li>
             <li><a href="#" class="nav-item"><i class="fa-solid fa-file-invoice"></i> Ledger Transaksi</a></li>
             <li><a href="#" class="nav-item"><i class="fa-solid fa-chart-line"></i> UMKM Insight</a></li>
-            <li style="margin-top: 2rem;"><a href="#" class="nav-item"><i class="fa-solid fa-gear"></i> Pengaturan</a></li>
-            <li><a href="#" class="nav-item" style="color: var(--danger);"><i class="fa-solid fa-arrow-right-from-bracket"></i> Keluar</a></li>
+            <li style="margin-top: 2rem;"><a href="#" class="nav-item"><i class="fa-solid fa-gear"></i> Pengaturan</a>
+            </li>
+            <li><a href="#" class="nav-item" style="color: var(--danger);"><i
+                        class="fa-solid fa-arrow-right-from-bracket"></i> Keluar</a></li>
         </ul>
     </aside>
 
     <!-- Main Content Area -->
     <main class="main-content">
-        
+
         <!-- Header -->
         <header>
             <div class="header-title">
@@ -454,7 +622,7 @@
 
         <!-- Top Cards Grid -->
         <section class="dashboard-grid">
-            
+
             <!-- Balance Card -->
             <div class="glass-card balance-card">
                 <div class="card-label">
@@ -490,13 +658,71 @@
             </div>
         </section>
 
+        <!-- Second Row Grid: Chart and System Status -->
+        <section class="dashboard-grid" style="grid-template-columns: 2fr 1fr;">
+
+            <!-- Cashflow Chart -->
+            <div class="glass-card">
+                <div class="section-header">
+                    <div class="card-label">Statistik Cashflow Ekosistem</div>
+                    <select class="form-control" style="width: auto; padding: 0.25rem 0.5rem; font-size: 0.8rem;">
+                        <option>7 Hari Terakhir</option>
+                        <option>Bulan Ini</option>
+                    </select>
+                </div>
+                <div style="height: 250px; margin-top: 1rem;">
+                    <canvas id="cashflowChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Ecosystem Status -->
+            <div class="glass-card">
+                <div class="card-label" style="margin-bottom: 1rem;">Status Ekosistem</div>
+
+                <div class="stat-row">
+                    <span style="color: var(--text-muted);">Max Money Supply</span>
+                    <span style="font-weight: 600;">Rp 1.000.000.000</span>
+                </div>
+                <div class="stat-row">
+                    <span style="color: var(--text-muted);">Uang Beredar (UMKM)</span>
+                    <span style="font-weight: 600; color: var(--warning);">Rp 150.000.000</span>
+                </div>
+                <div class="stat-row">
+                    <span style="color: var(--text-muted);">Bank Reserve</span>
+                    <span style="font-weight: 600; color: var(--success);">Rp 850.000.000</span>
+                </div>
+                <div class="stat-row">
+                    <span style="color: var(--text-muted);">Total Pinjaman Aktif</span>
+                    <span style="font-weight: 600; color: var(--danger);">Rp 25.000.000</span>
+                </div>
+                <div class="stat-row">
+                    <span style="color: var(--text-muted);">Velocity of Money</span>
+                    <span style="font-weight: 600; color: var(--primary);">Tinggi</span>
+                </div>
+
+                <div style="margin-top: 1.5rem;">
+                    <div
+                        style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 0.5rem;">
+                        <span>Kapasitas Reserve</span>
+                        <span>85%</span>
+                    </div>
+                    <div
+                        style="width: 100%; background: rgba(255,255,255,0.1); height: 6px; border-radius: 10px; overflow: hidden;">
+                        <div
+                            style="width: 85%; height: 100%; background: linear-gradient(90deg, var(--success), var(--primary));">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Ledger Table -->
         <section class="ledger-section">
             <div class="section-header">
                 <h2>Riwayat Ledger Terbaru</h2>
                 <a href="#" class="view-all">Lihat Semua <i class="fa-solid fa-arrow-right"></i></a>
             </div>
-            
+
             <div class="glass-card table-container">
                 <table>
                     <thead>
@@ -516,6 +742,37 @@
         </section>
 
     </main>
+
+    <!-- Modal Kirim Dana -->
+    <div class="modal-overlay" id="transferModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Kirim Dana (Transfer)</div>
+                <button class="close-modal" id="closeTransferModal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="transferForm">
+                <div class="form-group">
+                    <label class="form-label">Tujuan (Account ID / Aplikasi)</label>
+                    <select class="form-control" id="transferTarget">
+                        <option value="">Pilih Tujuan...</option>
+                        <option value="USR-092">USR-092 (Budi UMKM)</option>
+                        <option value="APP-MKP">Marketplace (Settlement)</option>
+                        <option value="APP-SPL">SupplierHub (Payment)</option>
+                        <option value="APP-LOG">LogistiKita (Ongkir)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Jumlah (Rp)</label>
+                    <input type="number" class="form-control" placeholder="Contoh: 500000" id="transferAmount">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Catatan</label>
+                    <input type="text" class="form-control" placeholder="Opsional" id="transferNote">
+                </div>
+                <button type="button" class="btn-primary" id="btnSubmitTransfer">Kirim Sekarang</button>
+            </form>
+        </div>
+    </div>
 
     <script>
         // Data Mockup untuk Ledger Transaksi
@@ -574,20 +831,20 @@
 
         // Render Data ke Table
         const tbody = document.getElementById('ledger-body');
-        
+
         function getIconClass(type) {
-            if(type === 'in') return '<div class="tx-icon tx-in"><i class="fa-solid fa-arrow-down"></i></div>';
-            if(type === 'out') return '<div class="tx-icon tx-out"><i class="fa-solid fa-arrow-up"></i></div>';
+            if (type === 'in') return '<div class="tx-icon tx-in"><i class="fa-solid fa-arrow-down"></i></div>';
+            if (type === 'out') return '<div class="tx-icon tx-out"><i class="fa-solid fa-arrow-up"></i></div>';
             return '<div class="tx-icon tx-fee"><i class="fa-solid fa-percent"></i></div>';
         }
 
         function getAmountClass(type) {
-            if(type === 'in') return 'amount-in';
+            if (type === 'in') return 'amount-in';
             return 'amount-out';
         }
 
         function getStatusLabel(status) {
-            if(status === 'success') return '<span class="status success">Berhasil</span>';
+            if (status === 'success') return '<span class="status success">Berhasil</span>';
             return '<span class="status pending">Tertunda</span>';
         }
 
@@ -615,17 +872,161 @@
             tbody.appendChild(tr);
         });
 
-        // Interaksi Hover Tombol Sederhana
+        // Interaksi Hover Tombol Sederhana & Buka Modal
         const actionBtns = document.querySelectorAll('.action-btn');
-        actionBtns.forEach(btn => {
+        actionBtns.forEach((btn, index) => {
             btn.addEventListener('click', () => {
                 const icon = btn.querySelector('i');
                 icon.style.transform = 'scale(0.8)';
                 setTimeout(() => {
                     icon.style.transform = 'scale(1)';
                 }, 150);
+
+                // Jika tombol pertama (Kirim Dana) diklik
+                if (index === 0) {
+                    document.getElementById('transferModal').classList.add('active');
+                }
             });
+        });
+
+        // Modal Logic
+        const transferModal = document.getElementById('transferModal');
+        const closeTransferModal = document.getElementById('closeTransferModal');
+        const btnSubmitTransfer = document.getElementById('btnSubmitTransfer');
+
+        closeTransferModal.addEventListener('click', () => {
+            transferModal.classList.remove('active');
+        });
+
+        transferModal.addEventListener('click', (e) => {
+            if (e.target === transferModal) {
+                transferModal.classList.remove('active');
+            }
+        });
+
+        btnSubmitTransfer.addEventListener('click', () => {
+            const target = document.getElementById('transferTarget').value;
+            const amount = document.getElementById('transferAmount').value;
+
+            if (!target || !amount) {
+                alert("Mohon isi tujuan dan jumlah transfer.");
+                return;
+            }
+
+            btnSubmitTransfer.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memproses...';
+            btnSubmitTransfer.style.opacity = '0.8';
+
+            setTimeout(() => {
+                alert(`Berhasil mengirim Rp ${amount} ke ${target}`);
+                transferModal.classList.remove('active');
+                btnSubmitTransfer.innerHTML = 'Kirim Sekarang';
+                btnSubmitTransfer.style.opacity = '1';
+                document.getElementById('transferForm').reset();
+            }, 1000);
+        });
+
+        // Chart.js Inisialisasi
+        const ctx = document.getElementById('cashflowChart').getContext('2d');
+
+        // Gradient for line chart
+        const gradientIn = ctx.createLinearGradient(0, 0, 0, 400);
+        gradientIn.addColorStop(0, 'rgba(16, 185, 129, 0.5)');
+        gradientIn.addColorStop(1, 'rgba(16, 185, 129, 0)');
+
+        const gradientOut = ctx.createLinearGradient(0, 0, 0, 400);
+        gradientOut.addColorStop(0, 'rgba(239, 68, 68, 0.5)');
+        gradientOut.addColorStop(1, 'rgba(239, 68, 68, 0)');
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'],
+                datasets: [
+                    {
+                        label: 'Uang Masuk (Inflow)',
+                        data: [12, 19, 15, 25, 22, 30, 28],
+                        borderColor: '#10b981',
+                        backgroundColor: gradientIn,
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#10b981',
+                        pointBorderColor: '#fff',
+                        pointRadius: 4
+                    },
+                    {
+                        label: 'Uang Keluar (Outflow)',
+                        data: [8, 15, 10, 18, 20, 25, 22],
+                        borderColor: '#ef4444',
+                        backgroundColor: gradientOut,
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#ef4444',
+                        pointBorderColor: '#fff',
+                        pointRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            color: '#94a3b8',
+                            font: {
+                                family: "'Outfit', sans-serif",
+                                size: 12
+                            },
+                            usePointStyle: true,
+                            boxWidth: 8
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(10, 14, 23, 0.9)',
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        borderColor: 'rgba(255,255,255,0.1)',
+                        borderWidth: 1,
+                        padding: 10,
+                        displayColors: true,
+                        usePointStyle: true,
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.05)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#94a3b8',
+                            font: { family: "'Outfit', sans-serif" }
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.05)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#94a3b8',
+                            font: { family: "'Outfit', sans-serif" },
+                            callback: function (value) {
+                                return value + ' Jt';
+                            }
+                        }
+                    }
+                },
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+            }
         });
     </script>
 </body>
+
 </html>
