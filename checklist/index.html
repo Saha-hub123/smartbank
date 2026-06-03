@@ -16,10 +16,54 @@
     <header>
         <h1>SmartBank Project Status</h1>
         <p>Live Tracker Implementasi Sistem</p>
+        <div class="actions">
+            <button id="btn-add-task" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Tambah Tugas</button>
+            <button id="btn-export" class="btn btn-secondary"><i class="fa-solid fa-download"></i> Simpan CSV</button>
+            <button id="btn-reset" class="btn btn-danger"><i class="fa-solid fa-rotate-left"></i> Reset Data</button>
+        </div>
     </header>
 
     <div class="container" id="dashboard">
         <div class="loading"><i class="fa-solid fa-circle-notch fa-spin"></i> Memuat data checklist...</div>
+    </div>
+
+    <!-- Modal Form -->
+    <div class="modal-overlay" id="modal-task">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Tambah Fitur / Tugas Baru</h2>
+                <button class="close-btn" id="close-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="form-task">
+                <div class="form-group">
+                    <label>Peran (Role)</label>
+                    <input type="text" id="input-role" required placeholder="Contoh: Admin Bank atau Teller Bank" list="role-options">
+                    <datalist id="role-options">
+                        <option value="Admin Bank">
+                        <option value="Teller Bank">
+                        <option value="Nasabah Ritel">
+                        <option value="Sistem & Infrastruktur">
+                    </datalist>
+                </div>
+                <div class="form-group">
+                    <label>Nama Fitur</label>
+                    <input type="text" id="input-feature" required placeholder="Contoh: Validasi KTP">
+                </div>
+                <div class="form-group">
+                    <label>Status Saat Ini</label>
+                    <select id="input-status" required>
+                        <option value="Tertunda">Tertunda</option>
+                        <option value="Berjalan">Berjalan</option>
+                        <option value="Selesai">Selesai</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Deskripsi Singkat</label>
+                    <textarea id="input-desc" required placeholder="Jelaskan kegunaan fitur ini..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Simpan Tugas</button>
+            </form>
+        </div>
     </div>
 
     <!-- PapaParse for CSV parsing -->
