@@ -1,0 +1,20 @@
+Role,Feature,Status,Description
+Admin Bank,Antarmuka (UI/UX) Dashboard,Selesai,Dashboard Admin dengan desain responsif dan visualisasi data finansial
+Admin Bank,Integrasi Backend,Selesai,Skrip frontend terhubung API Node.js dan Prisma ORM
+Admin Bank,Manajemen Saldo (F-01),Selesai,Menampilkan data nasabah tipe akun status dan nominal saldo
+Admin Bank,Validasi Pinjaman (F-04),Selesai,Penyetujuan atau penolakan pengajuan kredit via API
+Admin Bank,Distribusi Dana (F-06),Selesai,Pemindahan dana legal dari bank Reserve ke sirkulasi ekosistem
+Admin Bank,Tarik Biaya Layanan (F-07),Selesai,Trigger manual penarikan fee admin dari sirkulasi
+Admin Bank,Buku Besar / Ledger (F-08),Selesai,Tabel Ledger memonitor riwayat transaksi SSOT real-time
+Teller Bank,Antarmuka (UI/UX) Workspace,Selesai,Workspace operasional memiliki pencarian nasabah
+Teller Bank,Integrasi Backend,Tertunda,Logika endpoint API ke antarmuka Teller belum terpasang
+Teller Bank,Setor & Tarik Tunai (F-05),Berjalan,UI beroperasi secara visual namun eksekusi mock alert
+Teller Bank,Transfer Antar User (F-02),Berjalan,UI pemindahan dana tersedia namun belum memanggil ke API
+Nasabah Ritel,Antarmuka (UI/UX) Mobile-first,Selesai,Dioptimalkan ukuran HP dengan efek glassmorphism
+Nasabah Ritel,Integrasi Backend,Tertunda,Pertukaran data API ke aplikasi Nasabah belum ada
+Nasabah Ritel,Informasi Saldo (F-01),Berjalan,UI kartu ATM visual tersedia namun data statis
+Nasabah Ritel,Transfer Antar User (F-02),Berjalan,UI pengiriman dana dinamis fungsionalitas belum aktif
+Nasabah Ritel,Pengajuan Pinjaman (F-04),Berjalan,Skema pinjaman perlu disatukan ke API
+Sistem & Infrastruktur,Arsitektur RDBMS,Selesai,Konfigurasi ORM Prisma sudah diterapkan
+Sistem & Infrastruktur,Business Logic,Selesai,API Node.js untuk Dashboard User Loan dan Transaksi
+Sistem & Infrastruktur,Pembayaran Transaksi API (F-03),Berjalan,Logika webhook dan validasi untuk entitas luar dipersiapkan
