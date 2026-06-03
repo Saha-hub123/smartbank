@@ -7,6 +7,138 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Login Overlay Styling */
+        .login-overlay-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(10, 14, 23, 0.97);
+            backdrop-filter: blur(10px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+        .login-overlay-container.hidden {
+            display: none !important;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+            padding: 2.5rem;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(18, 24, 38, 0.7);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+        }
+        .login-tabs {
+            display: flex;
+            margin-bottom: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px;
+            border-radius: 8px;
+        }
+        .login-tab {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 500;
+            font-size: 0.95rem;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+        .login-tab.active {
+            background: var(--primary);
+            color: #fff;
+        }
+        .login-form-content {
+            display: none;
+            text-align: left;
+        }
+        .login-form-content.active {
+            display: block;
+        }
+        .w-100 {
+            width: 100%;
+        }
+        .btn-gradient {
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--primary), #00f2fe);
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .btn-gradient:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.4);
+        }
+        
+        /* Table and layout helper */
+        .two-column {
+            display: flex;
+            gap: 2rem;
+            margin-top: 1.5rem;
+        }
+        @media (max-width: 768px) {
+            .two-column {
+                flex-direction: column;
+            }
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        th, td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        th {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        td {
+            color: var(--text-main);
+        }
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .status-badge.pending {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+        .status-badge.approved, .status-badge.success {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+        .status-badge.rejected, .status-badge.danger {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+    </style>
 </head>
 <body>
     <div class="app-container">
@@ -31,6 +163,9 @@
                 </a>
                 <a href="#" class="nav-item" data-target="tagihan">
                     <i class="fas fa-file-invoice-dollar"></i> Tagihan
+                </a>
+                <a href="#" class="nav-item" data-target="loan">
+                    <i class="fas fa-hand-holding-dollar"></i> Pinjaman
                 </a>
                 <a href="#" class="nav-item" data-target="history">
                     <i class="fas fa-history"></i> Riwayat Transaksi
@@ -263,14 +398,138 @@
                     <h1>Riwayat Transaksi</h1>
                     <p>Semua mutasi rekening Anda ada di sini.</p>
                 </div>
-                <div class="glass-panel" style="text-align:center; padding: 60px;">
-                    <i class="fas fa-tools" style="font-size: 4rem; color: var(--text-muted); margin-bottom: 20px;"></i>
-                    <h3 style="color: var(--text-main); margin-bottom: 10px; font-size:1.5rem;">Fitur Sedang Dikembangkan</h3>
-                    <p style="color: var(--text-muted);">Riwayat detail akan tersedia pada pembaruan berikutnya.</p>
+                <div class="glass-panel" style="padding: 20px;">
+                    <div style="overflow-x: auto;">
+                        <table class="transaction-table">
+                            <thead>
+                                <tr>
+                                    <th>ID Transaksi</th>
+                                    <th>Tanggal</th>
+                                    <th>Keterangan</th>
+                                    <th>Sumber</th>
+                                    <th>Nominal</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-table-body">
+                                <tr>
+                                    <td colspan="5" style="text-align: center; color: var(--text-muted);">Belum ada riwayat transaksi</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Loan View -->
+            <section id="loan" class="view-section">
+                <div class="page-header">
+                    <h1>Pinjaman (Loan)</h1>
+                    <p>Ajukan pinjaman modal usaha dengan bunga 10% dan batas Rp 100.000.</p>
+                </div>
+                <div class="two-column">
+                    <!-- Form Pengajuan -->
+                    <div class="glass-panel form-container" style="flex: 1;">
+                        <h3 style="margin-bottom: 1rem; color: var(--primary);">Ajukan Pinjaman Baru</h3>
+                        <form id="loan-form" class="action-form">
+                            <div class="form-group">
+                                <label>Jumlah Pinjaman (Maks. Rp 100.000)</label>
+                                <div class="input-prefix" style="display:flex; align-items:center;">
+                                    <span style="background:rgba(255,255,255,0.05); padding: 12px; border-radius: 8px 0 0 8px; border: 1px solid rgba(255,255,255,0.1); border-right:none;">Rp</span>
+                                    <input type="number" id="loan-amount" placeholder="0" min="1000" max="100000" required style="border-radius: 0 8px 8px 0;">
+                                </div>
+                            </div>
+                            <div class="form-group" style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 8px; margin-top: 1rem;">
+                                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                                    <span style="color:var(--text-muted); font-size:0.9rem;">Bunga (10%):</span>
+                                    <span id="loan-interest" style="color:var(--danger); font-weight:600; font-size:0.9rem;">Rp 0</span>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; border-top: 1px solid rgba(255,255,255,0.05); padding-top:8px; font-weight:600;">
+                                    <span style="color:var(--text-main);">Total Pengembalian:</span>
+                                    <span id="loan-total" style="color:var(--primary);">Rp 0</span>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn-gradient w-100" style="margin-top:1.5rem;">Ajukan Pinjaman</button>
+                        </form>
+                    </div>
+
+                    <!-- Daftar Pinjaman -->
+                    <div class="glass-panel" style="flex: 1.5; padding: 20px;">
+                        <h3 style="margin-bottom: 1rem;">Daftar Riwayat Pinjaman</h3>
+                        <div style="overflow-x: auto;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID Pinjaman</th>
+                                        <th>Pokok</th>
+                                        <th>Total + Bunga</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="loan-table-body">
+                                    <tr>
+                                        <td colspan="4" style="text-align: center; color: var(--text-muted);">Belum ada riwayat pengajuan</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </section>
 
         </main>
+    </div>
+
+    <!-- Login Overlay -->
+    <div id="login-overlay" class="login-overlay-container">
+        <div class="login-card glass-panel">
+            <div class="logo" style="justify-content: center; margin-bottom: 1.5rem; display:flex; align-items:center; gap:10px;">
+                <div class="logo-icon"><i class="fas fa-university"></i></div>
+                <h2 style="font-weight:700;">SmartBank</h2>
+            </div>
+            
+            <!-- Tab Login / Register -->
+            <div class="login-tabs">
+                <button type="button" class="login-tab active" id="btn-tab-login">Masuk</button>
+                <button type="button" class="login-tab" id="btn-tab-register">Daftar Baru</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="login-form-element" class="login-form-content active">
+                <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem; text-align: center;">
+                    Pilih akun demo atau masukkan ID Nasabah Anda.
+                </p>
+                <div class="form-group" style="margin-bottom:1rem;">
+                    <label style="display:block; margin-bottom:5px; font-weight:500;">Pilih Akun Demo</label>
+                    <select id="login-select-user" style="width:100%; padding:10px; border-radius:8px; background:rgba(18,24,38,0.8); border:1px solid rgba(255,255,255,0.1); color:var(--text-main); font-family:inherit;">
+                        <option value="">-- Ketik ID Manual --</option>
+                        <option value="USR-1029">Budi Santoso (USR-1029)</option>
+                        <option value="USR-001">Ahmad Yani (USR-001)</option>
+                        <option value="USR-002">Siti Aminah (USR-002)</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom:1.5rem;">
+                    <label style="display:block; margin-bottom:5px; font-weight:500;">Atau Ketik ID Nasabah</label>
+                    <input type="text" id="login-user-id" placeholder="Contoh: USR-1029" style="width:100%; padding:10px; border-radius:8px; background:rgba(18,24,38,0.8); border:1px solid rgba(255,255,255,0.1); color:var(--text-main);">
+                </div>
+                <button type="submit" class="btn-gradient w-100"><i class="fas fa-sign-in-alt"></i> Masuk Aplikasi</button>
+            </form>
+
+            <!-- Register Form -->
+            <form id="register-form-element" class="login-form-content">
+                <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem; text-align: center;">
+                    Daftar nasabah baru dan dapatkan saldo awal Rp 50.000 (Aturan Keuangan #2).
+                </p>
+                <div class="form-group" style="margin-bottom:1rem;">
+                    <label style="display:block; margin-bottom:5px; font-weight:500;">ID Nasabah Baru</label>
+                    <input type="text" id="reg-user-id" placeholder="Contoh: USR-003" required style="width:100%; padding:10px; border-radius:8px; background:rgba(18,24,38,0.8); border:1px solid rgba(255,255,255,0.1); color:var(--text-main);">
+                </div>
+                <div class="form-group" style="margin-bottom:1.5rem;">
+                    <label style="display:block; margin-bottom:5px; font-weight:500;">Nama Lengkap</label>
+                    <input type="text" id="reg-name" placeholder="Contoh: Muhammad Isa" required style="width:100%; padding:10px; border-radius:8px; background:rgba(18,24,38,0.8); border:1px solid rgba(255,255,255,0.1); color:var(--text-main);">
+                </div>
+                <button type="submit" class="btn-gradient w-100"><i class="fas fa-user-plus"></i> Daftar & Masuk</button>
+            </form>
+        </div>
     </div>
 
     <script src="script.js"></script>
