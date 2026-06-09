@@ -25,6 +25,6 @@ Kepatuhan Aturan,Komunikasi API Gateway Eksternal,Tertunda,Sistem belum diintegr
 Kepatuhan Aturan,Fee Bank (1%) & Pajak (2%),Selesai,Pemotongan otomatis pada fitur transfer telah presisi
 Kepatuhan Aturan,Limit Pinjaman & Bunga 10%,Selesai,Maksimal peminjaman 100k dan skema beban telah disetel
 Kepatuhan Aturan,Kontrol Money Supply Maksimal,Selesai,Sistem SSOT mengelola Supply Reserve dan Circulating
-Kepatuhan Aturan,Limit Reserve Bank 98%,Tertunda,Belum ada penjagaan statis yang memblokir penarikan di bawah batas
+Kepatuhan Aturan,Limit Reserve Bank 98%,Selesai,Sistem telah menerapkan validasi keras (blocking) saat memproses transaksi yang berisiko menyentuh threshold 98%
 Dokumentasi,Dokumen Desain Sistem,Selesai,PRD dan DOKUMENTASI teknis (arsitektur & use case) telah terbit
 Dokumentasi,Skenario Demo Integrasi,Tertunda,Demo end-to-end menunggu API eksternal tersambung

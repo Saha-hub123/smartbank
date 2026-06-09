@@ -1,184 +1,219 @@
+// Initial default data from the latest system state.
+// This avoids CORS issues when running via file:///
+const defaultData = [
+  { Role: "Admin Bank", Feature: "Antarmuka (UI/UX) Dashboard", Status: "Selesai", Description: "Dashboard Admin dengan desain responsif dan visualisasi data finansial" },
+  { Role: "Admin Bank", Feature: "Integrasi Backend", Status: "Selesai", Description: "Skrip frontend terhubung API Node.js dan Prisma ORM" },
+  { Role: "Admin Bank", Feature: "Manajemen Saldo (F-01)", Status: "Selesai", Description: "Menampilkan data nasabah tipe akun status dan nominal saldo" },
+  { Role: "Admin Bank", Feature: "Validasi Pinjaman (F-04)", Status: "Selesai", Description: "Penyetujuan atau penolakan pengajuan kredit via API" },
+  { Role: "Admin Bank", Feature: "Distribusi Dana (F-06)", Status: "Selesai", Description: "Pemindahan dana legal dari bank Reserve ke sirkulasi ekosistem" },
+  { Role: "Admin Bank", Feature: "Tarik Biaya Layanan (F-07)", Status: "Selesai", Description: "Trigger manual penarikan fee admin dari sirkulasi" },
+  { Role: "Admin Bank", Feature: "Buku Besar / Ledger (F-08)", Status: "Selesai", Description: "Tabel Ledger memonitor riwayat transaksi SSOT real-time" },
+  { Role: "Teller Bank", Feature: "Antarmuka (UI/UX) Workspace", Status: "Selesai", Description: "Workspace operasional memiliki pencarian nasabah" },
+  { Role: "Teller Bank", Feature: "Integrasi Backend", Status: "Selesai", Description: "Logika endpoint API ke antarmuka Teller telah terhubung sepenuhnya" },
+  { Role: "Teller Bank", Feature: "Setor & Tarik Tunai (F-05)", Status: "Selesai", Description: "Formulir eksekusi terhubung secara langsung ke server melalui API" },
+  { Role: "Teller Bank", Feature: "Transfer Antar User (F-02)", Status: "Selesai", Description: "Pemindahan dana terverifikasi menggunakan backend API" },
+  { Role: "Nasabah Ritel", Feature: "Antarmuka (UI/UX) Mobile-first", Status: "Selesai", Description: "Dioptimalkan ukuran HP dengan efek glassmorphism" },
+  { Role: "Nasabah Ritel", Feature: "Integrasi Backend", Status: "Selesai", Description: "Sistem JWT Authentication dan data fetch API telah diimplementasi" },
+  { Role: "Nasabah Ritel", Feature: "Informasi Saldo (F-01)", Status: "Selesai", Description: "UI menampilkan data saldo akurat langsung dari server" },
+  { Role: "Nasabah Ritel", Feature: "Transfer Antar User (F-02)", Status: "Selesai", Description: "Fungsionalitas transfer sukses terkoneksi ke API internal" },
+  { Role: "Nasabah Ritel", Feature: "Pengajuan Pinjaman (F-04)", Status: "Selesai", Description: "Formulir pinjaman otomatis mengirim request ke Dashboard Admin" },
+  { Role: "Sistem & Infrastruktur", Feature: "Arsitektur RDBMS", Status: "Selesai", Description: "Konfigurasi ORM Prisma sudah diterapkan" },
+  { Role: "Sistem & Infrastruktur", Feature: "Business Logic", Status: "Selesai", Description: "API Node.js untuk Dashboard User Loan dan Transaksi" },
+  { Role: "Sistem & Infrastruktur", Feature: "Pembayaran Transaksi API (F-03)", Status: "Berjalan", Description: "Logika webhook dan validasi untuk entitas luar dipersiapkan" },
+  { Role: "Kepatuhan Aturan", Feature: "Pola Input-Proses-Output (IPO)", Status: "Selesai", Description: "Setiap fitur API memiliki alur IPO yang eksplisit" },
+  { Role: "Kepatuhan Aturan", Feature: "Keamanan Autentikasi (JWT)", Status: "Selesai", Description: "Mekanisme otorisasi ketat telah diterapkan antar modul" },
+  { Role: "Kepatuhan Aturan", Feature: "Pencatatan Log & Ledger", Status: "Selesai", Description: "Aktivitas transaksi dan error terekam kuat di database" },
+  { Role: "Kepatuhan Aturan", Feature: "Komunikasi API Gateway Eksternal", Status: "Tertunda", Description: "Sistem belum diintegrasikan dengan gerbang jaringan luar" },
+  { Role: "Kepatuhan Aturan", Feature: "Fee Bank (1%) & Pajak (2%)", Status: "Selesai", Description: "Pemotongan otomatis pada fitur transfer telah presisi" },
+  { Role: "Kepatuhan Aturan", Feature: "Limit Pinjaman & Bunga 10%", Status: "Selesai", Description: "Maksimal peminjaman 100k dan skema beban telah disetel" },
+  { Role: "Kepatuhan Aturan", Feature: "Kontrol Money Supply Maksimal", Status: "Selesai", Description: "Sistem SSOT mengelola Supply Reserve dan Circulating" },
+  { Role: "Kepatuhan Aturan", Feature: "Limit Reserve Bank 98%", Status: "Selesai", Description: "Sistem telah menerapkan validasi keras (blocking) saat memproses transaksi yang berisiko menyentuh threshold 98%" },
+  { Role: "Dokumentasi", Feature: "Dokumen Desain Sistem", Status: "Selesai", Description: "PRD dan DOKUMENTASI teknis (arsitektur & use case) telah terbit" },
+  { Role: "Dokumentasi", Feature: "Skenario Demo Integrasi", Status: "Tertunda", Description: "Demo end-to-end menunggu API eksternal tersambung" }
+];
+
+let appData = [];
+const STORAGE_KEY = 'smartbank_board_v1';
+
+// Initialization
 document.addEventListener('DOMContentLoaded', () => {
-    let appData = [];
+    loadData();
+    setupFileInput();
+});
+
+// Load Data
+function loadData() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+        appData = JSON.parse(saved);
+    } else {
+        // Deep copy default data if no local storage
+        appData = JSON.parse(JSON.stringify(defaultData));
+        saveData();
+    }
+    renderBoard();
+}
+
+function saveData() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+}
+
+// Render Kanban Board
+function renderBoard() {
+    const pendingList = document.getElementById('list-pending');
+    const completedList = document.getElementById('list-completed');
     
-    const getRoleIcon = (roleName) => {
-        if(roleName.includes('Admin')) return '<i class="fa-solid fa-building-columns"></i>';
-        if(roleName.includes('Teller')) return '<i class="fa-solid fa-user-tie"></i>';
-        if(roleName.includes('Nasabah')) return '<i class="fa-solid fa-mobile-screen"></i>';
-        if(roleName.includes('Sistem')) return '<i class="fa-solid fa-server"></i>';
-        return '<i class="fa-solid fa-list-check"></i>';
-    };
+    pendingList.innerHTML = '';
+    completedList.innerHTML = '';
+    
+    let pendingCount = 0;
+    let completedCount = 0;
 
-    function loadData() {
-        // Force refresh local storage once to show updated progress automatically
-        if (!sessionStorage.getItem('updated_to_v3')) {
-            localStorage.removeItem('smartbank_checklist');
-            sessionStorage.setItem('updated_to_v3', 'true');
-        }
+    appData.forEach((task, index) => {
+        const isCompleted = task.Status === 'Selesai';
+        if (isCompleted) completedCount++;
+        else pendingCount++;
 
-        const savedData = localStorage.getItem('smartbank_checklist');
-        if(savedData) {
-            appData = JSON.parse(savedData);
-            renderDashboard(appData);
+        const card = document.createElement('div');
+        card.className = `task-card ${isCompleted ? 'completed' : ''}`;
+        
+        card.innerHTML = `
+            <div class="task-checkbox-wrapper">
+                <input type="checkbox" class="task-checkbox" 
+                    ${isCompleted ? 'checked' : ''} 
+                    onchange="toggleTaskStatus(${index}, this.checked)">
+            </div>
+            <div class="task-content">
+                <div class="task-role">${task.Role}</div>
+                <div class="task-title">${task.Feature}</div>
+                <div class="task-desc">${task.Description}</div>
+            </div>
+            <div class="task-actions">
+                <button class="edit-btn" onclick="openEditModal(${index})" title="Edit Tugas">✏️</button>
+            </div>
+        `;
+
+        if (isCompleted) {
+            completedList.appendChild(card);
         } else {
-            // Load original from CSV
-            Papa.parse("data.csv", {
-                download: true,
+            pendingList.appendChild(card);
+        }
+    });
+
+    document.getElementById('count-pending').innerText = pendingCount;
+    document.getElementById('count-completed').innerText = completedCount;
+}
+
+// Checkbox Toggle
+function toggleTaskStatus(index, isChecked) {
+    appData[index].Status = isChecked ? 'Selesai' : 'Tertunda';
+    saveData();
+    renderBoard();
+}
+
+// File Import Logic
+function setupFileInput() {
+    document.getElementById('importCsv').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const csvContent = event.target.result;
+            Papa.parse(csvContent, {
                 header: true,
                 skipEmptyLines: true,
                 complete: function(results) {
-                    appData = results.data;
-                    saveData();
-                    renderDashboard(appData);
-                },
-                error: function(err) {
-                    document.getElementById('dashboard').innerHTML = `<div class="loading" style="color: var(--danger)">
-                        <i class="fa-solid fa-triangle-exclamation"></i><br>
-                        Gagal memuat data CSV.<br>
-                        <small style="font-size: 0.9rem; color: var(--text-muted)">Pastikan Anda membuka file ini menggunakan Web Server (misal: Live Server di VSCode).</small>
-                    </div>`;
-                    console.error(err);
+                    if (results.data && results.data.length > 0) {
+                        appData = results.data;
+                        saveData();
+                        renderBoard();
+                        alert('Data berhasil di-import dari file CSV!');
+                    }
                 }
             });
-        }
-    }
-
-    function saveData() {
-        localStorage.setItem('smartbank_checklist', JSON.stringify(appData));
-    }
-
-    // Export toggle status to global window object
-    window.toggleStatus = function(index) {
-        const cycle = {
-            'Selesai': 'Tertunda',
-            'Tertunda': 'Berjalan',
-            'Berjalan': 'Selesai'
         };
-        const currentStatus = appData[index].Status;
-        appData[index].Status = cycle[currentStatus] || 'Tertunda';
+        reader.readAsText(file);
         
-        saveData();
-        renderDashboard(appData);
-    };
+        // Reset input so the same file can be selected again
+        e.target.value = '';
+    });
+}
 
-    function renderDashboard(data) {
-        const dashboard = document.getElementById('dashboard');
-        dashboard.innerHTML = '';
-
-        if(data.length === 0) {
-            dashboard.innerHTML = '<div class="loading">Belum ada tugas tercatat.</div>';
-            return;
-        }
-
-        // Include original index before grouping so we can edit the right element
-        const dataWithIndex = data.map((item, index) => ({...item, originalIndex: index}));
-
-        const groupedData = dataWithIndex.reduce((acc, row) => {
-            if(!acc[row.Role]) acc[row.Role] = [];
-            acc[row.Role].push(row);
-            return acc;
-        }, {});
-
-        for(const [role, tasks] of Object.entries(groupedData)) {
-            const card = document.createElement('div');
-            card.className = 'role-card';
-            
-            const completed = tasks.filter(t => t.Status.toLowerCase() === 'selesai').length;
-            const progress = Math.round((completed / tasks.length) * 100) || 0;
-            
-            let tasksHtml = tasks.map(task => {
-                const statusClass = `status-${task.Status.toLowerCase().replace(/\s+/g, '-')}`;
-                let iconHtml = '';
-                
-                if(task.Status.toLowerCase() === 'selesai') {
-                    iconHtml = '<i class="fa-solid fa-circle-check" style="color: var(--success); font-size: 1.1rem;"></i>';
-                } else if(task.Status.toLowerCase() === 'berjalan') {
-                    iconHtml = '<i class="fa-solid fa-spinner fa-spin" style="color: var(--warning); font-size: 1.1rem;"></i>';
-                } else {
-                    iconHtml = '<i class="fa-solid fa-circle-pause" style="color: var(--danger); font-size: 1.1rem;"></i>';
-                }
-
-                return `
-                    <div class="task-item" onclick="toggleStatus(${task.originalIndex})" title="Klik untuk ubah status">
-                        <div class="task-header">
-                            <div class="task-name">${iconHtml} ${task.Feature}</div>
-                            <span class="status-badge ${statusClass}">${task.Status}</span>
-                        </div>
-                        <div class="task-desc">${task.Description}</div>
-                    </div>
-                `;
-            }).join('');
-
-            card.innerHTML = `
-                <div class="role-header">
-                    <div class="role-icon">
-                        ${getRoleIcon(role)}
-                    </div>
-                    <div style="flex-grow: 1;">
-                        <div class="role-title">${role}</div>
-                        <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
-                            <span>Progress</span>
-                            <span>${completed}/${tasks.length} Selesai</span>
-                        </div>
-                        <div class="progress-bar-container">
-                            <div class="progress-bar" style="width: ${progress}%"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="task-list">
-                    ${tasksHtml}
-                </div>
-            `;
-            dashboard.appendChild(card);
-        }
-    }
-
-    // Modal Events
-    const modal = document.getElementById('modal-task');
-    document.getElementById('btn-add-task').addEventListener('click', () => modal.classList.add('active'));
-    document.getElementById('close-modal').addEventListener('click', () => modal.classList.remove('active'));
+// Export CSV Logic
+function exportCSV() {
+    if (appData.length === 0) return alert('Tidak ada data untuk diekspor.');
     
-    // Form Submission
-    document.getElementById('form-task').addEventListener('submit', (e) => {
-        e.preventDefault();
-        
-        const newTask = {
-            Role: document.getElementById('input-role').value,
-            Feature: document.getElementById('input-feature').value,
-            Status: document.getElementById('input-status').value,
-            Description: document.getElementById('input-desc').value
-        };
+    const csv = Papa.unparse(appData);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute("href", url);
+    link.setAttribute("download", "smartbank_checklist.csv");
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
 
-        appData.push(newTask);
-        saveData();
-        renderDashboard(appData);
+// Modal Logic
+const modal = document.getElementById('taskModal');
+const form = document.getElementById('taskForm');
 
-        e.target.reset();
-        modal.classList.remove('active');
-    });
+function openAddModal() {
+    document.getElementById('modalTitle').innerText = 'Tambah Tugas Baru';
+    document.getElementById('taskIndex').value = '';
+    form.reset();
+    modal.classList.add('active');
+}
 
-    // Export to CSV
-    document.getElementById('btn-export').addEventListener('click', () => {
-        const csv = Papa.unparse(appData);
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        const url = URL.createObjectURL(blob);
-        link.setAttribute("href", url);
-        link.setAttribute("download", "smartbank_checklist_updated.csv");
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    });
+function openEditModal(index) {
+    document.getElementById('modalTitle').innerText = 'Edit Tugas';
+    const task = appData[index];
+    document.getElementById('taskIndex').value = index;
+    document.getElementById('roleInput').value = task.Role;
+    document.getElementById('featureInput').value = task.Feature;
+    document.getElementById('descInput').value = task.Description;
+    modal.classList.add('active');
+}
 
-    // Reset Data
-    document.getElementById('btn-reset').addEventListener('click', () => {
-        if(confirm("Anda yakin ingin menghapus semua perubahan? Aplikasi akan di-reset menggunakan data asli dari file CSV.")) {
-            localStorage.removeItem('smartbank_checklist');
-            loadData();
-        }
-    });
+function closeModal() {
+    modal.classList.remove('active');
+}
 
-    // Init App
-    loadData();
+form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const index = document.getElementById('taskIndex').value;
+    const role = document.getElementById('roleInput').value.trim();
+    const feature = document.getElementById('featureInput').value.trim();
+    const desc = document.getElementById('descInput').value.trim();
+
+    if (index === '') {
+        // Add new
+        appData.push({
+            Role: role,
+            Feature: feature,
+            Status: 'Tertunda',
+            Description: desc
+        });
+    } else {
+        // Update existing
+        appData[index].Role = role;
+        appData[index].Feature = feature;
+        appData[index].Description = desc;
+    }
+
+    saveData();
+    renderBoard();
+    closeModal();
 });
+
+// Reset Data
+function resetData() {
+    if (confirm('Apakah Anda yakin ingin mengembalikan seluruh data ke kondisi awal CSV bawaan? Semua perubahan lokal akan hilang.')) {
+        appData = JSON.parse(JSON.stringify(defaultData));
+        saveData();
+        renderBoard();
+    }
+}

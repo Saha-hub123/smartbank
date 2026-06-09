@@ -3,71 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartBank Implementation Checklist</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>SmartBank Implementation Board</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 </head>
 <body>
-    <!-- Animated Blobs -->
-    <div class="blob blob-1"></div>
-    <div class="blob blob-2"></div>
+    <div class="app-container">
+        <header class="glass-header">
+            <div class="header-content">
+                <div>
+                    <h1>SmartBank Project Board</h1>
+                    <p>Track implementasi fitur tanpa batas server (Local Mode)</p>
+                </div>
+                <div class="header-actions">
+                    <label class="btn btn-outline" for="importCsv">
+                        📂 Import CSV
+                    </label>
+                    <input type="file" id="importCsv" accept=".csv" style="display: none;">
+                    
+                    <button class="btn btn-outline" onclick="exportCSV()">📥 Export CSV</button>
+                    <button class="btn btn-primary" onclick="openAddModal()">➕ Tambah Tugas</button>
+                    <button class="btn btn-danger" onclick="resetData()">🔄 Reset Data</button>
+                </div>
+            </div>
+        </header>
 
-    <header>
-        <h1>SmartBank Project Status</h1>
-        <p>Live Tracker Implementasi Sistem</p>
-        <div class="actions">
-            <button id="btn-add-task" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Tambah Tugas</button>
-            <button id="btn-export" class="btn btn-secondary"><i class="fa-solid fa-download"></i> Simpan CSV</button>
-            <button id="btn-reset" class="btn btn-danger"><i class="fa-solid fa-rotate-left"></i> Reset Data</button>
-        </div>
-    </header>
+        <main class="board-container">
+            <!-- Kolom Tertunda/Berjalan -->
+            <div class="board-column">
+                <div class="column-header">
+                    <h2>📝 To Do / In Progress</h2>
+                    <span class="count-badge" id="count-pending">0</span>
+                </div>
+                <div class="task-list" id="list-pending">
+                    <!-- Tasks injected here -->
+                </div>
+            </div>
 
-    <div class="container" id="dashboard">
-        <div class="loading"><i class="fa-solid fa-circle-notch fa-spin"></i> Memuat data checklist...</div>
+            <!-- Kolom Selesai -->
+            <div class="board-column">
+                <div class="column-header">
+                    <h2>✅ Selesai</h2>
+                    <span class="count-badge" id="count-completed">0</span>
+                </div>
+                <div class="task-list" id="list-completed">
+                    <!-- Tasks injected here -->
+                </div>
+            </div>
+        </main>
     </div>
 
-    <!-- Modal Form -->
-    <div class="modal-overlay" id="modal-task">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Tambah Fitur / Tugas Baru</h2>
-                <button class="close-btn" id="close-modal"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <form id="form-task">
+    <!-- Modal Form (Tambah/Edit) -->
+    <div class="modal-overlay" id="taskModal">
+        <div class="modal-content glass-card">
+            <h2 id="modalTitle">Tambah Tugas Baru</h2>
+            <form id="taskForm">
+                <input type="hidden" id="taskIndex">
                 <div class="form-group">
-                    <label>Peran (Role)</label>
-                    <input type="text" id="input-role" required placeholder="Contoh: Admin Bank atau Teller Bank" list="role-options">
-                    <datalist id="role-options">
-                        <option value="Admin Bank">
-                        <option value="Teller Bank">
-                        <option value="Nasabah Ritel">
-                        <option value="Sistem & Infrastruktur">
-                    </datalist>
+                    <label>Role / Kategori</label>
+                    <input type="text" id="roleInput" placeholder="Contoh: Admin Bank" required>
                 </div>
                 <div class="form-group">
                     <label>Nama Fitur</label>
-                    <input type="text" id="input-feature" required placeholder="Contoh: Validasi KTP">
+                    <input type="text" id="featureInput" placeholder="Contoh: Manajemen Saldo" required>
                 </div>
                 <div class="form-group">
-                    <label>Status Saat Ini</label>
-                    <select id="input-status" required>
-                        <option value="Tertunda">Tertunda</option>
-                        <option value="Berjalan">Berjalan</option>
-                        <option value="Selesai">Selesai</option>
-                    </select>
+                    <label>Deskripsi Detail</label>
+                    <textarea id="descInput" rows="3" placeholder="Jelaskan implementasinya..." required></textarea>
                 </div>
-                <div class="form-group">
-                    <label>Deskripsi Singkat</label>
-                    <textarea id="input-desc" required placeholder="Jelaskan kegunaan fitur ini..."></textarea>
+                <!-- Status input is hidden, handled by checkbox logic on board -->
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeModal()">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan</button>
                 </div>
-                <button type="submit" class="btn btn-primary w-100">Simpan Tugas</button>
             </form>
         </div>
     </div>
 
-    <!-- PapaParse for CSV parsing -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
