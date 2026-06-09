@@ -14,7 +14,17 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     currentToken = savedToken;
-    currentUser = JSON.parse(savedUser);
+    try {
+        if (savedUser === "undefined") throw new Error();
+        currentUser = JSON.parse(savedUser);
+        if (!currentUser) throw new Error();
+    } catch (e) {
+        localStorage.removeItem('smartbank_token');
+        localStorage.removeItem('smartbank_user');
+        window.location.href = 'login.html';
+        return;
+    }
+    
     initApp();
 });
 

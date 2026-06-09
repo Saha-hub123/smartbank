@@ -50,6 +50,12 @@ router.post('/deposit', async (req, res) => {
         throw new Error('Bank Reserve tidak mencukupi untuk mencetak uang digital baru.');
       }
 
+      // Validasi Keras: Reserve >= 98% Total Supply
+      const minReserve = state.totalSupply * 0.98;
+      if (state.reserve - depositAmount < minReserve) {
+        throw new Error('Validasi Keras Gagal: Setoran ini akan membuat Reserve jatuh di bawah 98% dari Total Supply. Transaksi ditolak.');
+      }
+
       // Kurangi reserve, tambah circulating
       const updatedState = await tx.systemState.update({
         where: { id: 1 },

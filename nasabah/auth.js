@@ -51,7 +51,7 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
         if (!res.ok) throw new Error(data.error);
         
         localStorage.setItem('smartbank_token', data.token);
-        localStorage.setItem('smartbank_user', JSON.stringify(data.data));
+        localStorage.setItem('smartbank_user', JSON.stringify(data.user || data.data));
 
         // Handle Remember Me
         if (rememberMe) {

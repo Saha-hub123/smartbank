@@ -139,6 +139,12 @@ router.post('/distribute', async (req, res) => {
         throw new Error('Insufficient reserve funds');
       }
 
+      // Validasi Keras: Reserve >= 98% Total Supply
+      const minReserve = state.totalSupply * 0.98;
+      if (state.reserve - amount < minReserve) {
+        throw new Error('Validasi Keras Gagal: Distribusi ini akan membuat Reserve jatuh di bawah 98% dari Total Supply');
+      }
+
       const updatedState = await tx.systemState.update({
         where: { id: 1 },
         data: {
@@ -247,6 +253,12 @@ router.post('/loans/:id/validate', async (req, res) => {
       const state = await tx.systemState.findUnique({ where: { id: 1 } });
       if (!state || state.reserve < loan.amount) {
         throw new Error('Insufficient reserve to approve loan');
+      }
+
+      // Validasi Keras: Reserve >= 98% Total Supply
+      const minReserve = state.totalSupply * 0.98;
+      if (state.reserve - loan.amount < minReserve) {
+        throw new Error('Validasi Keras Gagal: Pencairan pinjaman ini akan membuat Reserve jatuh di bawah 98% dari Total Supply');
       }
 
       const updatedState = await tx.systemState.update({
@@ -364,6 +376,46 @@ router.get('/closing-report', async (req, res) => {
     res.json(finalReport);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
+  }
+});
+router.post('/settings/supply', async (req, res) => {
+  const { newSupply } = req.body;
+  if (!newSupply || newSupply <= 0) {
+    return res.status(400).json({ error: 'Invalid supply value' });
+  }
+
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      const state = await tx.systemState.findUnique({ where: { id: 1 } });
+      if (!state) throw new Error('System state not found');
+
+      const diff = Number(newSupply) - state.totalSupply;
+      
+      if (diff < 0) {
+        // Decrease supply: validate 98% rule
+        const proposedReserve = state.reserve + diff; // diff is negative
+        const minReserve = Number(newSupply) * 0.98;
+        if (proposedReserve < minReserve) {
+          throw new Error('Validasi Keras Gagal: Tidak bisa menurunkan supply karena Reserve akan jatuh di bawah 98% dari Total Supply baru.');
+        }
+        if (proposedReserve < 0) {
+           throw new Error('Reserve tidak mencukupi untuk pengurangan supply.');
+        }
+      }
+
+      const updatedState = await tx.systemState.update({
+        where: { id: 1 },
+        data: {
+          totalSupply: Number(newSupply),
+          reserve: { increment: diff }
+        }
+      });
+      return updatedState;
+    });
+
+    res.json({ message: 'Supply berhasil diupdate', data: result });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
   }
 });
 

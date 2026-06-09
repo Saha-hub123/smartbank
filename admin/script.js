@@ -26,6 +26,7 @@ function getStatusLabel(status) {
     if(status === 'approved') return '<span class="status success">Disetujui</span>';
     if(status === 'rejected') return '<span class="status danger">Ditolak</span>';
     if(status === 'over_limit') return '<span class="status danger">Over Limit</span>';
+    if(status === 'paid') return '<span class="status success" style="background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid var(--success);">Lunas</span>';
     return '<span class="status pending">Tertunda</span>';
 }
 
@@ -374,9 +375,29 @@ window.rejectLoan = async function(id) {
     }
 };
 
-window.updateSupplyLimit = function(e) {
+window.updateSupplyLimit = async function(e) {
     e.preventDefault();
-    alert("Maaf, update supply limit belum diimplementasikan di versi Backend ini.");
+    const newSupply = document.getElementById('set-supply-limit').value;
+    if(!newSupply || newSupply <= 0) return alert('Input tidak valid');
+
+    try {
+        const res = await fetch(`${API_URL}/settings/supply`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ newSupply })
+        });
+        const data = await res.json();
+        
+        if(res.ok) {
+            alert("Supply Limit berhasil diupdate menjadi Rp " + Number(newSupply).toLocaleString('id-ID'));
+            document.getElementById('set-supply-limit').value = '';
+            renderDashboard();
+        } else {
+            alert("Error: " + data.error);
+        }
+    } catch (err) {
+        alert("Terjadi kesalahan pada server");
+    }
 };
 
 window.resetDatabase = function() {
