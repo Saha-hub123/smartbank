@@ -58,16 +58,16 @@ Penerapan algoritma-algoritma ini krusial untuk:
 Pemilihan algoritma ini divalidasi oleh literatur akademis yang tersimpan dalam repositori dokumen proyek ini:
 
 1. **Algoritma Knuth-Morris-Pratt (KMP)**
-   - **Jurnal Terkait:** *"Abstract Keyword Searching with Knuth Morris Pratt Algorithm"* dan *"Implementasi Algoritma Knuth Morris Pratt untuk Pencarian Data pada Sistem Informasi Finansial"*.
+   - **Jurnal Terkait:** *"Abstract Keyword Searching with Knuth Morris Pratt Algorithm"* dan *"Implementasi Algoritma Knuth Morris Pratt Pada Pencarian Data Asosiasi UMKM Provinsi Bengkulu"*.
    - **Hubungan:** Jurnal-jurnal ini menjadi landasan teori implementasi KMP pada fitur pencarian riwayat transaksi Nasabah dan *Ledger* Admin. Pembahasan pada jurnal memvalidasi bahwa penggunaan tabel *prefix* (LPS) sangat menghemat memori dan mempercepat pencarian data finansial.
 
 2. **Algoritma Greedy**
-   - **Jurnal Terkait:** *"Modifikasi Keluaran Pecahan Mata Uang untuk Mesin ATM/Teller"* dan *"The Greedy Coin Change Problem and Its Optimality in Currency Systems"*.
+   - **Jurnal Terkait:** *"Greedy Algorithms and the Making Change Problem"* dan *"The Greedy Coin Change Problem and Its Optimality in Currency Systems"*.
    - **Hubungan:** Referensi ini menginspirasi pembuatan fitur *Smart Cash Calculator* di aplikasi Teller. Jurnal tersebut membuktikan bahwa masalah kembalian koin/pecahan (*Coin Change Problem*) pada sistem mata uang standar paling optimal diselesaikan dengan pendekatan rakus (*Greedy*).
 
 3. **Algoritma Divide & Conquer (Merge Sort)**
-   - **Jurnal Terkait:** *"Halstead's Complexity Measure of a Merge Sort and Modified Merge Sort Algorithms"* dan *"Dasar Logika Algoritma: Pemrosesan Array Besar menggunakan Divide and Conquer"*.
-   - **Hubungan:** Digunakan pada modul Cetak Buku Tabungan dan Manajemen Antrean Teller. Jurnal ini memberikan argumen kuat mengenai metrik kompleksitas *Merge Sort* yang konsisten di $O(n \log n)$ dan sifatnya yang stabil (*stable sort*).
+   - **Jurnal Terkait:** *"Shared Memory, Message Passing, and Hybrid Merge Sorts for Standalone and Clustered SMPs"* dan *"Halstead's Complexity Measure of a Merge Sort and Modified Merge Sort Algorithms"*.
+   - **Hubungan:** Digunakan pada modul Cetak Buku Tabungan dan Manajemen Antrean Teller. Jurnal ini memberikan argumen kuat mengenai performa dan kompleksitas *Merge Sort* yang konsisten di $O(n \log n)$ dan pentingnya penggunaan *stable sort*.
 
 4. **Algoritma Breadth-First Search (BFS)**
    - **Jurnal Terkait:** *"An Exploratory Survey on the Use of Graph Algorithms in Analysis of Networks and Fraud"* dan *"Detecting Financial Fraud through Hybrid AI Models Leveraging Graph Networks and Transactional Behavior"*.
