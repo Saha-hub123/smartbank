@@ -31,7 +31,6 @@ function switchView(viewId, element) {
 function calculateDenominations(amount) {
     const denominations = [100000, 50000, 20000, 10000, 5000, 2000, 1000];
     const result = {};
-
     for (let coin of denominations) {
         if (amount >= coin) {
             const count = Math.floor(amount / coin);
@@ -43,28 +42,61 @@ function calculateDenominations(amount) {
     return result;
 }
 
+// --- Pendekatan Naif (Loop Pengurangan Manual) ---
+function naiveDenominations(amount) {
+    const denominations = [100000, 50000, 20000, 10000, 5000, 2000, 1000];
+    const result = {};
+    for (let coin of denominations) {
+        let count = 0;
+        while (amount >= coin) {
+            amount -= coin;
+            count++;
+        }
+        if (count > 0) result[coin] = count;
+    }
+    if (amount > 0) result['sisa'] = amount;
+    return result;
+}
+
 // --- Algoritma Merge Sort ---
 function mergeSortTransactions(arr) {
     if (arr.length <= 1) return arr;
     const mid = Math.floor(arr.length / 2);
     const left = arr.slice(0, mid);
     const right = arr.slice(mid);
-    return merge(mergeSortTransactions(left), mergeSortTransactions(right));
+    const leftSorted = mergeSortTransactions(left);
+    const rightSorted = mergeSortTransactions(right);
+    return merge(leftSorted, rightSorted);
 }
 
 function merge(left, right) {
-    let resultArray = [], leftIndex = 0, rightIndex = 0;
-    while (leftIndex < left.length && rightIndex < right.length) {
-        // Sort descending by timestamp/createdAt
-        if (new Date(left[leftIndex].createdAt).getTime() >= new Date(right[rightIndex].createdAt).getTime()) {
-            resultArray.push(left[leftIndex]);
-            leftIndex++;
+    let result = [];
+    let i = 0, j = 0;
+    while (i < left.length && j < right.length) {
+        if (new Date(left[i].createdAt).getTime() >= new Date(right[j].createdAt).getTime()) {
+            result.push(left[i]);
+            i++;
         } else {
-            resultArray.push(right[rightIndex]);
-            rightIndex++;
+            result.push(right[j]);
+            j++;
         }
     }
-    return resultArray.concat(left.slice(leftIndex)).concat(right.slice(rightIndex));
+    return result.concat(left.slice(i)).concat(right.slice(j));
+}
+
+// --- Algoritma Naif (Bubble Sort murni O(N^2)) ---
+function bubbleSortTransactions(arr) {
+    let n = arr.length;
+    for (let i = 0; i < n - 1; i++) {
+        for (let j = 0; j < n - i - 1; j++) {
+            if (new Date(arr[j].createdAt).getTime() < new Date(arr[j+1].createdAt).getTime()) {
+                let temp = arr[j];
+                arr[j] = arr[j+1];
+                arr[j+1] = temp;
+            }
+        }
+    }
+    return arr;
 }
 // ------------------------------------------
 
@@ -144,9 +176,27 @@ async function handleWithdraw(e) {
         const data = await response.json();
         if (!response.ok) throw new Error(data.error);
         
-        // --- Eksekusi Algoritma Greedy ---
+        // --- Cek Toggle Algoritma ---
+        const isSmartAlg = document.getElementById('smart-algorithm-toggle')?.checked !== false;
+        const start = performance.now();
+        
         const tarikNominal = Number(amount);
-        const pecahan = calculateDenominations(tarikNominal);
+        let pecahan;
+        if(isSmartAlg) {
+            pecahan = calculateDenominations(tarikNominal);
+        } else {
+            pecahan = naiveDenominations(tarikNominal);
+        }
+        
+        const end = performance.now();
+        const timeTaken = end - start;
+        const timeLabel = document.getElementById('greedy-execution-time');
+        if(timeLabel) {
+            timeLabel.innerText = `⏱️ Waktu Kalkulasi: ${timeTaken.toFixed(4)} ms`;
+            if(timeTaken <= 0.5) timeLabel.style.color = 'var(--success)';
+            else if(timeTaken <= 2) timeLabel.style.color = 'var(--warning)';
+            else timeLabel.style.color = 'var(--danger)';
+        }
         
         let pecahanHtml = '<ul style="list-style: none; padding: 0;">';
         for (let key in pecahan) {
@@ -207,46 +257,88 @@ async function handleTransfer(e) {
         alert(`Gagal: ${error.message}`);
     }
 }
+let currentTellerTxs = [];
+let tellerRenderCount = 100;
 
 async function loadTransactions() {
     try {
         const response = await fetch(`${API_URL}/transactions`);
         let transactions = await response.json();
         
-        // --- Eksekusi Merge Sort (Descending) ---
-        transactions = mergeSortTransactions(transactions);
-        // ----------------------------------------
+        const isSmartAlg = document.getElementById('smart-algorithm-toggle')?.checked !== false;
+        const start = performance.now();
+        
+        if (isSmartAlg) {
+            transactions = mergeSortTransactions(transactions);
+        } else {
+            transactions = bubbleSortTransactions(transactions);
+        }
+        
+        const end = performance.now();
+        const timeTaken = end - start;
+        const timeLabel = document.getElementById('sort-execution-time');
+        if (timeLabel) {
+            timeLabel.innerText = `⏱️ ${timeTaken.toFixed(2)} ms`;
+            if(timeTaken <= 15) timeLabel.style.color = 'var(--success)';
+            else if(timeTaken <= 100) timeLabel.style.color = 'var(--warning)';
+            else timeLabel.style.color = 'var(--danger)';
+        }
+        
+        currentTellerTxs = transactions;
+        tellerRenderCount = 100;
         
         let html = '';
-        transactions.forEach(trx => {
-            const date = new Date(trx.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB';
-            let amountHtml = '';
-            
-            if (trx.type === 'in') {
-                amountHtml = `<td style="color: var(--success);">Rp ${trx.amount.toLocaleString('id-ID')}</td><td>-</td>`;
-            } else {
-                amountHtml = `<td>-</td><td style="color: var(--danger);">Rp ${trx.amount.toLocaleString('id-ID')}</td>`;
-            }
-
-            html += `
-                <tr>
-                    <td>${date}</td>
-                    <td>${trx.id.substring(0, 8)}</td>
-                    <td>${trx.subtitle || 'System'}</td>
-                    <td>${trx.title}</td>
-                    ${amountHtml}
-                    <td><span class="status success">Sukses</span></td>
-                </tr>
-            `;
-        });
+        const txToRender = transactions.slice(0, tellerRenderCount);
         
-        const tableBody = document.getElementById('teller-history-body');
-        if (tableBody) tableBody.innerHTML = html;
-        
+        txToRender.forEach(trx => html += generateTellerHtml(trx));
+        document.getElementById('teller-history-body').innerHTML = html;
     } catch (error) {
-        console.error('Error fetching transactions:', error);
+        console.error("Error loading transactions:", error);
     }
 }
+
+function appendTellerHistory(transactions) {
+    const tbody = document.getElementById('teller-history-body');
+    if (!tbody) return;
+    let html = '';
+    transactions.forEach(trx => html += generateTellerHtml(trx));
+    tbody.insertAdjacentHTML('beforeend', html);
+}
+
+function generateTellerHtml(trx) {
+    const date = new Date(trx.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB';
+    let amountHtml = '';
+    
+    if (trx.type === 'in') {
+        amountHtml = `<td style="color: var(--success);">Rp ${trx.amount.toLocaleString('id-ID')}</td><td>-</td>`;
+    } else {
+        amountHtml = `<td>-</td><td style="color: var(--danger);">Rp ${trx.amount.toLocaleString('id-ID')}</td>`;
+    }
+
+    return `
+        <tr>
+            <td>${date}</td>
+            <td>${trx.id}</td>
+            <td>${trx.title} <br><small style="color: var(--text-muted)">${trx.subtitle || ''}</small></td>
+            ${amountHtml}
+            <td><span style="background: rgba(16, 185, 129, 0.2); color: var(--success); padding: 4px 8px; border-radius: 4px; font-size: 0.8rem;">Selesai</span></td>
+        </tr>
+    `;
+}
+
+// Virtual Scrolling Event untuk Teller
+window.addEventListener('scroll', () => {
+    // Cek jika user sudah scroll mendekati bagian bawah halaman
+    if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 200) {
+        if (tellerRenderCount < currentTellerTxs.length) {
+            const nextBatch = currentTellerTxs.slice(tellerRenderCount, tellerRenderCount + 100);
+            if (nextBatch.length > 0) {
+                appendTellerHistory(nextBatch);
+                tellerRenderCount += 100;
+            }
+        }
+    }
+});
 
 async function loadTellerDashboard() {
     try {

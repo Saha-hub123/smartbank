@@ -18,6 +18,15 @@
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Toggle Switch Styles */
+        .switch { position: relative; display: inline-block; width: 40px; height: 22px; margin: 0; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 22px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        input:checked + .slider { background-color: #10B981; }
+        input:checked + .slider:before { transform: translateX(18px); }
+    </style>
 </head>
 <body>
 
@@ -49,6 +58,13 @@
                 <p>Pantau seluruh aktivitas keuangan dari single source of truth.</p>
             </div>
             <div class="user-profile">
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-right: 1.5rem; background: var(--bg-soft); padding: 0.4rem 0.8rem; border-radius: 8px;">
+                    <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-main);">Algoritma Pintar</span>
+                    <label class="switch">
+                        <input type="checkbox" id="smart-algorithm-toggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
                 <div class="avatar">A</div>
                 <div class="user-info">
                     <span style="font-weight: 500; font-size: 0.95rem;">Admin Pusat</span>
@@ -190,9 +206,12 @@
                 <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
                     <h2>Ledger Transaksi (Single Source of Truth)</h2>
                     <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                        <div class="search-box" style="position: relative;">
-                            <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
-                            <input type="text" id="kmp-search-input" class="form-control" placeholder="Cari TX ID, Referensi, Nama..." style="padding-left: 35px; width: 300px; max-width: 100%; border-radius: 8px;" onkeyup="handleLedgerSearch()">
+                        <div class="search-box" style="position: relative; display: flex; align-items: center; gap: 10px;">
+                            <div style="position: relative;">
+                                <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+                                <input type="text" id="kmp-search-input" class="form-control" placeholder="Cari TX ID, Referensi, Nama..." style="padding-left: 35px; width: 300px; max-width: 100%; border-radius: 8px;" onkeyup="handleLedgerSearch()">
+                            </div>
+                            <span id="kmp-execution-time" style="font-size: 0.85rem; color: var(--text-muted); white-space: nowrap; font-family: monospace; background: var(--bg-soft); padding: 0.3rem 0.6rem; border-radius: 6px;">⏱️ 0.00 ms</span>
                         </div>
                         <button class="btn-primary" style="width: auto; padding: 0.5rem 1rem; margin-top: 0;" onclick="renderLedgerFull()"><i class="fa-solid fa-arrows-rotate"></i> Refresh</button>
                     </div>
@@ -355,6 +374,15 @@
                             </div>
                             <button type="submit" class="btn-primary">Update Limit</button>
                         </form>
+                    </div>
+
+                    <div class="glass-card" style="border-color: rgba(59, 130, 246, 0.3);">
+                        <h3 style="margin-bottom: 1rem; color: var(--primary);">Dummy Data Generator</h3>
+                        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Generate ribuan data transaksi dummy untuk menguji performa algoritma (KMP & Merge Sort) berbanding dengan metode naif. Menyuntikkan 5000 transaksi acak ke dalam tabel Ledger.</p>
+                        
+                        <button class="btn-primary" onclick="generateDummyData()" style="width: auto;">
+                            <i class="fa-solid fa-database"></i> Generate 5000 Dummy Data
+                        </button>
                     </div>
 
                     <div class="glass-card" style="border-color: rgba(239, 68, 68, 0.3);">

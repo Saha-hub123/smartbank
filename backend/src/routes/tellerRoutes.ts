@@ -214,8 +214,7 @@ router.get('/transactions', async (req, res) => {
   try {
     const transactions = await prisma.transaction.findMany({
       where: { source: 'Teller Pusat' },
-      orderBy: { createdAt: 'desc' },
-      take: 50
+      orderBy: { createdAt: 'desc' }
     });
     res.json(transactions);
   } catch (error) {

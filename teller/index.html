@@ -15,6 +15,15 @@
     
     <!-- External CSS -->
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Toggle Switch Styles */
+        .switch { position: relative; display: inline-block; width: 40px; height: 22px; margin: 0; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 22px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        input:checked + .slider { background-color: #10B981; }
+        input:checked + .slider:before { transform: translateX(18px); }
+    </style>
 </head>
 <body>
 
@@ -41,6 +50,13 @@
                 <p id="page-subtitle">Pusat layanan transaksi perbankan langsung (Walk-in).</p>
             </div>
             <div class="user-profile">
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-right: 1.5rem; background: var(--bg-soft); padding: 0.4rem 0.8rem; border-radius: 8px;">
+                    <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-main);">Algoritma Pintar</span>
+                    <label class="switch">
+                        <input type="checkbox" id="smart-algorithm-toggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
                 <div class="avatar">T1</div>
                 <div class="user-info">
                     <span style="font-weight: 500; font-size: 0.95rem;">Teller 01</span>
@@ -226,8 +242,11 @@
         <!-- VIEW: RIWAYAT TELLER -->
         <div id="view-riwayat" class="view-section">
             <div class="glass-card">
-                <div class="card-label" style="margin-bottom: 1.5rem;">
-                    <span>Riwayat Transaksi Shift Ini</span>
+                <div class="card-label" style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <span>Riwayat Transaksi Shift Ini</span>
+                        <span id="sort-execution-time" style="font-size: 0.85rem; color: var(--text-muted); white-space: nowrap; font-family: monospace; background: var(--bg-soft); padding: 0.3rem 0.6rem; border-radius: 6px; margin-left: 10px;">⏱️ 0.00 ms</span>
+                    </div>
                     <button style="background: none; border: 1px solid var(--glass-border); color: var(--text-main); padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer;"><i class="fa-solid fa-download"></i> Unduh Laporan</button>
                 </div>
                 
@@ -237,8 +256,7 @@
                             <tr>
                                 <th>Waktu</th>
                                 <th>ID Transaksi</th>
-                                <th>Nasabah</th>
-                                <th>Jenis Transaksi</th>
+                                <th>Rincian Transaksi</th>
                                 <th>Kredit (Masuk)</th>
                                 <th>Debit (Keluar)</th>
                                 <th>Status</th>
@@ -263,6 +281,7 @@
                     </div>
                     <h2 style="color: var(--text-main); font-size: 1.5rem; margin-bottom: 5px;">Rincian Uang Tunai</h2>
                     <p style="color: var(--text-muted); font-size: 0.95rem;">Siapkan pecahan uang berikut untuk diberikan kepada nasabah.</p>
+                    <div id="greedy-execution-time" style="font-size: 0.85rem; color: var(--text-muted); font-family: monospace; margin-top: 10px;">⏱️ Waktu Kalkulasi: 0.00 ms</div>
                 </div>
                 
                 <div id="greedyResult" style="margin-bottom: 25px; background: rgba(0, 0, 0, 0.2); padding: 15px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.05);"></div>

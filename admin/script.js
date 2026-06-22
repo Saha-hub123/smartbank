@@ -141,21 +141,21 @@ function buildLPSTable(pattern) {
 function searchLedgerKMP(transactionsArray, keyword) {
     if (!keyword) return transactionsArray;
     
-    const lps = buildLPSTable(keyword.toLowerCase());
+    const lowerKeyword = keyword.toLowerCase();
+    const lps = buildLPSTable(lowerKeyword);
     
     return transactionsArray.filter(tx => {
-        // Menggabungkan beberapa field menjadi satu string target pencarian
-        const text = (tx.id + " " + tx.title + " " + tx.subtitle + " " + tx.source).toLowerCase();
+        const text = (tx.id + " " + tx.title + " " + (tx.subtitle || "") + " " + tx.source).toLowerCase();
         let i = 0, j = 0;
         
         while (i < text.length) {
-            if (keyword.toLowerCase()[j] === text[i]) {
+            if (lowerKeyword[j] === text[i]) {
                 i++; 
                 j++;
             }
-            if (j === keyword.length) {
-                return true; // Keyword ditemukan
-            } else if (i < text.length && keyword.toLowerCase()[j] !== text[i]) {
+            if (j === lowerKeyword.length) {
+                return true; 
+            } else if (i < text.length && lowerKeyword[j] !== text[i]) {
                 if (j !== 0) {
                     j = lps[j - 1];
                 } else {
@@ -167,17 +167,27 @@ function searchLedgerKMP(transactionsArray, keyword) {
     });
 }
 
+let currentAdminTxs = [];
+let adminRenderCount = 100;
+
 function renderLedgerTable(displayTxs) {
     const tbody = document.getElementById('ledger-body-full');
     if(!tbody) return;
 
+    currentAdminTxs = displayTxs;
+    adminRenderCount = 100;
+    const txToRender = displayTxs.slice(0, adminRenderCount);
+
     tbody.innerHTML = '';
-    if(displayTxs.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Belum ada transaksi</td></tr>';
+    if(txToRender.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Belum ada transaksi yang sesuai</td></tr>';
         return;
     }
+    appendTxsToTable(txToRender, tbody);
+}
 
-    displayTxs.forEach(tx => {
+function appendTxsToTable(txs, tbody) {
+    txs.forEach(tx => {
         const tr = document.createElement('tr');
         const sign = (tx.type === 'out' || tx.type === 'fee') ? '-' : '+';
         tr.innerHTML = `
@@ -186,7 +196,7 @@ function renderLedgerTable(displayTxs) {
                     ${getIconClass(tx.type)}
                     <div>
                         <div class="tx-title">${tx.title}</div>
-                        <div class="tx-subtitle">${tx.id} • ${tx.subtitle}</div>
+                        <div class="tx-subtitle">${tx.id} • ${tx.subtitle || ''}</div>
                     </div>
                 </div>
             </td>
@@ -202,6 +212,21 @@ function renderLedgerTable(displayTxs) {
         tbody.appendChild(tr);
     });
 }
+
+// Event Listener untuk Infinite Scrolling (Virtual Scrolling Simulation)
+window.addEventListener('scroll', () => {
+    // Cek jika user sudah scroll mendekati bagian bawah halaman
+    if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 200) {
+        if (adminRenderCount < currentAdminTxs.length) {
+            const tbody = document.getElementById('ledger-body-full');
+            const nextBatch = currentAdminTxs.slice(adminRenderCount, adminRenderCount + 100);
+            if (nextBatch.length > 0 && tbody) {
+                appendTxsToTable(nextBatch, tbody);
+                adminRenderCount += 100;
+            }
+        }
+    }
+});
 
 // Ledger Full Page
 async function renderLedgerFull() {
@@ -220,8 +245,74 @@ async function renderLedgerFull() {
 
 window.handleLedgerSearch = function() {
     const keyword = document.getElementById('kmp-search-input').value;
-    const filteredTxs = searchLedgerKMP(allLedgerTransactions, keyword);
+    const isSmartAlg = document.getElementById('smart-algorithm-toggle').checked;
+    
+    const start = performance.now();
+    let filteredTxs = [];
+    
+    if (isSmartAlg) {
+        filteredTxs = searchLedgerKMP(allLedgerTransactions, keyword);
+    } else {
+        // Pendekatan Brute-Force murni dalam JavaScript untuk komparasi adil O(n*m)
+        const naiveMatch = (text, pat) => {
+            text = text.toLowerCase();
+            pat = pat.toLowerCase();
+            const n = text.length;
+            const m = pat.length;
+            if(m === 0) return true;
+            for(let i=0; i <= n - m; i++) {
+                let j;
+                for(j=0; j < m; j++) {
+                    if (text[i+j] !== pat[j]) break;
+                }
+                if (j === m) return true;
+            }
+            return false;
+        };
+
+        if(!keyword) {
+             filteredTxs = allLedgerTransactions;
+        } else {
+             filteredTxs = allLedgerTransactions.filter(tx => {
+                 return naiveMatch(tx.id, keyword) ||
+                        naiveMatch(tx.title, keyword) ||
+                        (tx.subtitle && naiveMatch(tx.subtitle, keyword)) ||
+                        (tx.source && naiveMatch(tx.source, keyword));
+             });
+        }
+    }
+    
+    const end = performance.now();
+    const timeTaken = end - start;
+    const timeLabel = document.getElementById('kmp-execution-time');
+    if(timeLabel) {
+        timeLabel.innerText = `⏱️ ${timeTaken.toFixed(2)} ms`;
+        // Warna indikator disesuaikan dengan murni total waktu (bukan berdasarkan sakelar)
+        if(timeTaken <= 2) timeLabel.style.color = 'var(--success)';
+        else if(timeTaken <= 15) timeLabel.style.color = 'var(--warning)';
+        else timeLabel.style.color = 'var(--danger)';
+    }
+
     renderLedgerTable(filteredTxs);
+};
+
+window.generateDummyData = async function() {
+    if(!confirm("Proses ini akan meng-inject 5000 transaksi dummy ke database. Lanjutkan?")) return;
+    try {
+        const res = await fetch(`${API_URL}/seed-dummy`, { method: 'POST' });
+        const data = await res.json();
+        if(res.ok) {
+            alert(data.message);
+            renderDashboard();
+            if(document.querySelector('[data-target=view-ledger]').classList.contains('active')){
+                renderLedgerFull();
+            }
+        } else {
+            alert("Error: " + data.error);
+        }
+    } catch (err) {
+        alert("Terjadi kesalahan pada server");
+    }
 };
 
 async function renderLoans() {

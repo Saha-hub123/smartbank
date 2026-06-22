@@ -208,56 +208,136 @@ async function loadHistory() {
     }
 }
 
+// Search Logic & Virtual Scroll
+let currentDisplayTxs = [];
+let maxRendered = 100;
+
 function renderHistory(transactions) {
     const historyContainer = document.getElementById('history-container');
     if (!historyContainer) return;
     
+    currentDisplayTxs = transactions;
+    maxRendered = 100;
+    const txToRender = transactions.slice(0, maxRendered);
+    
     let html = '';
     
-    if (transactions.length === 0) {
-        html += `<p style="text-align:center; padding:40px; color:var(--text-muted);">Belum ada riwayat transaksi.</p>`;
+    if (txToRender.length === 0) {
+        html += `<p style="text-align:center; padding:40px; color:var(--text-muted);">Belum ada riwayat transaksi yang sesuai.</p>`;
     } else {
-        transactions.forEach(tx => {
-            const isOut = tx.type === 'out' || tx.type === 'fee';
-            const iconClass = isOut ? 'transfer-out' : 'transfer-in';
-            const iconFa = isOut ? 'fa-arrow-right' : 'fa-arrow-left';
-            const amountClass = isOut ? 'negative' : 'positive';
-            const amountPrefix = isOut ? '-' : '+';
-            const dateStr = new Date(tx.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' });
-
-            html += `
-                <div class="transaction-item" style="padding: 15px; border-bottom: 1px solid var(--glass-border);">
-                    <div class="tx-info">
-                        <div class="tx-icon ${iconClass}"><i class="fas ${iconFa}"></i></div>
-                        <div>
-                            <h4>${tx.title}</h4>
-                            <span class="date">${tx.subtitle || ''} | ${dateStr}</span>
-                        </div>
-                    </div>
-                    <div class="tx-amount ${amountClass}" style="font-weight:600;">${amountPrefix} Rp ${tx.amount.toLocaleString('id-ID')}</div>
-                </div>
-            `;
-        });
+        txToRender.forEach(tx => html += generateTxHTML(tx));
     }
-    
     historyContainer.innerHTML = html;
 }
 
-// Search Logic
+function appendHistory(transactions) {
+    const historyContainer = document.getElementById('history-container');
+    if (!historyContainer) return;
+    transactions.forEach(tx => {
+        historyContainer.insertAdjacentHTML('beforeend', generateTxHTML(tx));
+    });
+}
+
+function generateTxHTML(tx) {
+    const isOut = tx.type === 'out' || tx.type === 'fee';
+    const iconClass = isOut ? 'transfer-out' : 'transfer-in';
+    const iconFa = isOut ? 'fa-arrow-right' : 'fa-arrow-left';
+    const amountClass = isOut ? 'negative' : 'positive';
+    const amountPrefix = isOut ? '-' : '+';
+    const dateStr = new Date(tx.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' });
+
+    return `
+        <div class="transaction-item" style="padding: 15px; border-bottom: 1px solid var(--glass-border);">
+            <div class="tx-info">
+                <div class="tx-icon ${iconClass}"><i class="fas ${iconFa}"></i></div>
+                <div>
+                    <h4>${tx.title}</h4>
+                    <span class="date">${tx.subtitle || ''} | ${dateStr}</span>
+                </div>
+            </div>
+            <div class="tx-amount ${amountClass}" style="font-weight:600;">${amountPrefix} Rp ${tx.amount.toLocaleString('id-ID')}</div>
+        </div>
+    `;
+}
+
+// Virtual Scrolling Event
+const mainContent = document.querySelector('.main-content');
+if (mainContent) {
+    mainContent.addEventListener('scroll', () => {
+        if (mainContent.scrollTop + mainContent.clientHeight >= mainContent.scrollHeight - 200) {
+            if (maxRendered < currentDisplayTxs.length) {
+                const nextBatch = currentDisplayTxs.slice(maxRendered, maxRendered + 100);
+                if (nextBatch.length > 0) {
+                    appendHistory(nextBatch);
+                    maxRendered += 100;
+                }
+            }
+        }
+    });
+}
+
 const searchInput = document.getElementById('kmp-search-input');
+const toggleAlg = document.getElementById('smart-algorithm-toggle');
+const timeLabel = document.getElementById('kmp-execution-time');
+
 if (searchInput) {
     searchInput.addEventListener('input', (e) => {
-        const keyword = e.target.value.trim();
+        const keyword = e.target.value.trim().toLowerCase();
         if (keyword === '') {
+            if(timeLabel) timeLabel.innerText = '⏱️ 0.00 ms';
             renderHistory(allTransactions);
             return;
         }
 
-        // Gunakan KMP untuk mencari
-        const filtered = allTransactions.filter(tx => {
-            const fullText = `${tx.title} ${tx.subtitle} ${tx.amount}`.toLowerCase();
-            return searchKMP(fullText, keyword) !== -1;
-        });
+        const isSmartAlg = toggleAlg ? toggleAlg.checked : true;
+        const start = performance.now();
+        
+        let filtered = [];
+
+        if (isSmartAlg) {
+            // Algoritma Pintar (KMP)
+            const lps = buildLPSTable(keyword);
+            filtered = allTransactions.filter(tx => {
+                const text = (tx.title + " " + (tx.subtitle || "") + " " + tx.amount).toLowerCase();
+                let i = 0, j = 0;
+                while (i < text.length) {
+                    if (keyword[j] === text[i]) {
+                        i++; j++;
+                    }
+                    if (j === keyword.length) return true;
+                    else if (i < text.length && keyword[j] !== text[i]) {
+                        if (j !== 0) j = lps[j - 1];
+                        else i++;
+                    }
+                }
+                return false;
+            });
+        } else {
+            // Algoritma Naif (Brute Force murni)
+            filtered = allTransactions.filter(tx => {
+                const text = (tx.title + " " + (tx.subtitle || "") + " " + tx.amount).toLowerCase();
+                const n = text.length;
+                const m = keyword.length;
+                if(m === 0) return true;
+                for(let i=0; i <= n - m; i++) {
+                    let j;
+                    for(j=0; j < m; j++) {
+                        if (text[i+j] !== keyword[j]) break;
+                    }
+                    if (j === m) return true;
+                }
+                return false;
+            });
+        }
+
+        const end = performance.now();
+        const timeTaken = end - start;
+        if(timeLabel) {
+            timeLabel.innerText = `⏱️ ${timeTaken.toFixed(2)} ms`;
+            if(timeTaken <= 2) timeLabel.style.color = 'var(--success)';
+            else if(timeTaken <= 15) timeLabel.style.color = 'var(--warning)';
+            else timeLabel.style.color = 'var(--danger)';
+        }
 
         renderHistory(filtered);
     });

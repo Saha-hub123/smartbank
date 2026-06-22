@@ -75,8 +75,7 @@ router.get('/dashboard', async (req, res) => {
   try {
     const state = await getSystemState();
     const transactions = await prisma.transaction.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: 50
+      orderBy: { createdAt: 'desc' }
     });
     res.json({ systemState: state, transactions });
   } catch (error) {
@@ -416,6 +415,47 @@ router.post('/settings/supply', async (req, res) => {
     res.json({ message: 'Supply berhasil diupdate', data: result });
   } catch (error: any) {
     res.status(400).json({ error: error.message });
+  }
+});
+router.post('/seed-dummy', async (req, res) => {
+  try {
+    const dummyTransactions = [];
+    const sources = ['SmartBank', 'Marketplace', 'Nasabah App', 'Logistics', 'Teller Pusat'];
+    const types = ['in', 'out', 'fee'];
+    const statuses = ['success', 'success', 'success', 'pending', 'rejected'];
+
+    for (let i = 0; i < 5000; i++) {
+      const isFee = Math.random() > 0.8;
+      const type = isFee ? 'fee' : (Math.random() > 0.5 ? 'in' : 'out');
+      const source = sources[Math.floor(Math.random() * sources.length)];
+      const status = statuses[Math.floor(Math.random() * statuses.length)];
+      
+      const randomDaysAgo = Math.floor(Math.random() * 30);
+      const randomHoursAgo = Math.floor(Math.random() * 24);
+      const createdAt = new Date();
+      createdAt.setDate(createdAt.getDate() - randomDaysAgo);
+      createdAt.setHours(createdAt.getHours() - randomHoursAgo);
+
+      dummyTransactions.push({
+        id: `DUMMY-${Math.floor(Math.random() * 9999999)}-${i}`,
+        title: `Transaksi Dummy ${i}`,
+        subtitle: `Ref: ${Math.random().toString(36).substring(7).toUpperCase()}`,
+        type,
+        amount: Math.floor(Math.random() * 50000) + 1000,
+        source,
+        status,
+        createdAt
+      });
+    }
+
+    await prisma.transaction.createMany({
+      data: dummyTransactions,
+      skipDuplicates: true
+    });
+
+    res.json({ message: '5000 Dummy Data berhasil ditambahkan' });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
   }
 });
 
